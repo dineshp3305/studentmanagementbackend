@@ -1,41 +1,40 @@
 package org.example.demo; // Declares that this class is in the 'org.example.demo' package
 
 // Import necessary Spring and Java classes
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import java.util.*;
 
 @RestController // Tells Spring that this class is a REST controller (handles HTTP requests and returns JSON)
-@RequestMapping("/students") // All routes in this controller will start with '/students'
+@RequestMapping("/students")// All routes in this controller will start with '/students'
 public class StudentController {
 
     // In-memory list to store Student objects (like a fake database)
     private List<Student> students = new ArrayList<>();
-
+    @Autowired
+     private StudentRepo studentRepo;
     // Simple counter to generate unique student IDs
     private int idCounter = 1;
 
     // CREATE: Handles HTTP POST requests to /students
     @PostMapping
     public Student addStudent(@RequestBody Student student) {
-        student.setId(idCounter++);   // Set a unique ID for the student and increment the counter
-        students.add(student);       // Add the student to the list
+           // Set a unique ID for the student and increment the counter
+                  studentRepo.save(student);       // Add the student to the list
         return student;              // Return the added student as the response (in JSON)
     }
 
     // READ ALL: Handles HTTP GET requests to /students
     @GetMapping
     public List<Student> getStudents() {
-        return students; // Return the full list of students
+        return studentRepo.findAll(); // Return the full list of students
     }
 
     // READ ONE: Handles HTTP GET requests to /students/{id}
     @GetMapping("/{id}")
-    public Student getStudentById(@PathVariable int id) {
+    public Optional<Student> getStudentById(@PathVariable Long id) {
         // Search for the student with the matching ID using Java Streams
-        return students.stream()
-                .filter(s -> s.getId() == id)  // Filter by ID
-                .findFirst()                   // Return the first match
-                .orElse(null);                 // Return null if no match found
+        return studentRepo.findById(id);                // Return null if no match found
     }
 
     // UPDATE: Handles HTTP PUT requests to /students/{id}
@@ -54,9 +53,9 @@ public class StudentController {
 
     // DELETE: Handles HTTP DELETE requests to /students/{id}
     @DeleteMapping("/{id}")
-    public String deleteStudent(@PathVariable int id) {
+    public String deleteStudent(@PathVariable  Long id) {
         // Remove any student with the given ID from the list
-        students.removeIf(s -> s.getId() == id);
+        studentRepo.deleteById(id);
         return "Student with ID " + id + " deleted."; // Return confirmation message
     }
 }
